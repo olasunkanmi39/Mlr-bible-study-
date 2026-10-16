@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bible Study - Jesus Our Focus In This Revival</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    background: #eee8df;
+    color: #231b16;
+    line-height: 1.65;
+  }
+
+  header {
+    background: #3b291f;
+    color: #fff;
+    text-align: center;
+    padding: 28px 16px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  header h2 {
+    margin: 8px 0 0;
+    font-size: 1.15rem;
+    font-weight: normal;
+  }
+
+  main {
+    max-width: 920px;
+    margin: auto;
+    padding: 22px 14px 70px;
+  }
+
+  .note {
+    background: #fff;
+    border-left: 5px solid #8a5733;
+    padding: 13px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  .content {
+    background: #fffaf2;
+    border: 1px solid #d8c8b7;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  }
+
+  .content p {
+    margin: 0 0 16px;
+  }
+
+  .scripture-btn {
+    border: 1px solid #a77248;
+    background: #f0dcc7;
+    color: #4a2816;
+    border-radius: 999px;
+    padding: 3px 10px;
+    margin: 2px;
+    cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: .92rem;
+    display: inline-block;
+  }
+
+  .scripture-btn:hover,
+  .scripture-btn:focus {
+    background: #6b3f22;
+    color: #fff;
+    outline: none;
+  }
+
+  .scripture-btn::before {
+    content: "📖 ";
+  }
+
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 999;
+    padding: 18px;
+  }
+
+  .modal-bg.open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal {
+    background: #fffaf2;
+    width: min(760px,100%);
+    max-height: 85vh;
+    overflow: auto;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  }
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    border-bottom: 1px solid #d8c8b7;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  .modal-head h2 {
+    margin: 0;
+    color: #5b321c;
+    font-size: 1.25rem;
+  }
+
+  .close {
+    border: none;
+    background: transparent;
+    color: #6b3f22;
+    cursor: pointer;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .verse {
+    margin-bottom: 8px;
+  }
+
+  .verse-num {
+    color: #8a5733;
+    font-weight: bold;
+    margin-right: 5px;
+  }
+
+  .loading {
+    color: #6b3f22;
+    font-style: italic;
+  }
+
+  .error {
+    background: #ffecec;
+    color: #8b1111;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  article {
+    margin-bottom: 18px;
+  }
+
+  article h3 {
+    color: #5b321c;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Bible Study</h1>
+  <h2>JESUS — Our Focus In This Revival</h2>
+</header>
+
+<main>
+  <div class="note">
+    Click any scripture reference button to display the full KJV text using an online Bible API.
+  </div>
+
+  <div id="pdfText" class="content"></div>
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">Scripture</h2>
+      <button class="close" id="closeBtn">&times;</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const referenceMap = {
+  "Col. 2:17": "Colossians 2:17",
+
+  "Heb. 1:1-3": "Hebrews 1:1-3",
+  "Matt. 17:5": "Matthew 17:5",
+  "Col. 1:12-23, 27-29": "Colossians 1:12-23|Colossians 1:27-29",
+  "1Cor. 1:16-25": "1 Corinthians 1:16-25",
+  "1Cor. 2:1-5": "1 Corinthians 2:1-5",
+  "2Cor. 4:5-6": "2 Corinthians 4:5-6",
+
+  "Jn. 1:4, 9": "John 1:4|John 1:9",
+  "Jn. 3:16-21": "John 3:16-21",
+  "Jn. 8:12": "John 8:12",
+  "Jn. 9:4-5": "John 9:4-5",
+  "Matt. 5:14-16": "Matthew 5:14-16",
+  "Jn. 6:31-35": "John 6:31-35",
+  "Jn. 6:48-51": "John 6:48-51",
+  "Jn. 6:56-58": "John 6:56-58",
+  "Jn. 10:1-10": "John 10:1-10",
+  "Rev. 3:7-8": "Revelation 3:7-8",
+  "Jn. 10:11-16": "John 10:11-16",
+  "1Pet. 5:2-4": "1 Peter 5:2-4",
+  "Jn. 14:6": "John 14:6",
+  "Jn. 1:16-17": "John 1:16-17",
+  "Heb. 9:8": "Hebrews 9:8",
+  "Rom. 5:2": "Romans 5:2",
+  "Eph. 2:18": "Ephesians 2:18",
+  "Eph. 3:12": "Ephesians 3:12",
+  "Jn. 11:25-26": "John 11:25-26",
+  "Jn. 1:4": "John 1:4",
+  "Jn. 15:1-7": "John 15:1-7",
+
+  "Matt. 3:13-17": "Matthew 3:13-17",
+  "Jn. 1:26-34": "John 1:26-34",
+  "Matt. 17:1-8": "Matthew 17:1-8",
+  "Luk. 9:28-36": "Luke 9:28-36",
+  "2Pet. 1:16-18": "2 Peter 1:16-18",
+  "Rom. 8:29": "Romans 8:29",
+  "Isa. 42:1-4": "Isaiah 42:1-4",
+  "Mat. 12:15-21": "Matthew 12:15-21",
+  "Heb. 3:1-6": "Hebrews 3:1-6",
+  "Heb. 5:4-6": "Hebrews 5:4-6",
+  "Heb. 1:1-13": "Hebrews 1:1-13",
+
+  "Jn. 1:19-23": "John 1:19-23",
+  "Jn. 3:26-34": "John 3:26-34",
+  "Jn. 12:26": "John 12:26",
+  "Heb. 12:2-3": "Hebrews 12:2-3",
+
+  "Act. 4:10-12": "Acts 4:10-12",
+  "1Cor. 3:9-15": "1 Corinthians 3:9-15",
+  "Matt. 7:24-27": "Matthew 7:24-27",
+  "Matt. 16:16-19": "Matthew 16:16-19",
+  "Isa. 28:14-16": "Isaiah 28:14-16",
+  "Luk. 20:17-18": "Luke 20:17-18",
+  "1Pet. 2:4-7": "1 Peter 2:4-7",
+
+  "Jn. 1:29, 35-36": "John 1:29|John 1:35-36",
+  "Jn. 11:47-57": "John 11:47-57",
+  "1Cor. 5:7-8": "1 Corinthians 5:7-8",
+  "Isa. 53:5-8": "Isaiah 53:5-8",
+  "Col. 1:12-14": "Colossians 1:12-14",
+  "Heb. 9:14": "Hebrews 9:14",
+  "Heb. 9:22-28": "Hebrews 9:22-28",
+
+  "Heb. 2:17-18": "Hebrews 2:17-18",
+  "Heb. 4:14-16": "Hebrews 4:14-16",
+  "Heb. 5:1-5, 7": "Hebrews 5:1-5|Hebrews 5:7",
+  "Heb. 7:12-28": "Hebrews 7:12-28",
+  "Heb. 8:1-6": "Hebrews 8:1-6",
+  "Heb. 10:19-22": "Hebrews 10:19-22",
+
+  "Rom. 10:1-4": "Romans 10:1-4",
+  "Jn. 6:27-29": "John 6:27-29",
+  "Rom. 8:28-30": "Romans 8:28-30",
+
+  "Matt. 13:44-46": "Matthew 13:44-46",
+  "Jn. 3:16": "John 3:16",
+  "Jn. 4:10-14": "John 4:10-14",
+  "2Cor. 9:15": "2 Corinthians 9:15",
+  "Luk. 14:25-33": "Luke 14:25-33",
+  "Mk. 10:17-31": "Mark 10:17-31",
+  "Matt. 6:19-21": "Matthew 6:19-21",
+  "Mk. 10:21": "Mark 10:21",
+  "Lk. 14:26": "Luke 14:26",
+  "Phi. 3:4-14": "Philippians 3:4-14",
+  "Phi. 1:20-21": "Philippians 1:20-21",
+  "Phi. 3:4-8": "Philippians 3:4-8",
+  "Phi. 3:7-10": "Philippians 3:7-10",
+  "Phi. 3:10-14": "Philippians 3:10-14",
+  "Gen. 19:26": "Genesis 19:26",
+  "Lk. 17:31-32": "Luke 17:31-32",
+  "Col. 3:1-2": "Colossians 3:1-2",
+
+  "Heb. 12:1-3": "Hebrews 12:1-3",
+  "Rev. 1:5-8, 17-18": "Revelation 1:5-8|Revelation 1:17-18",
+  "Isa. 44:6": "Isaiah 44:6",
+  "1Pet. 2:21": "1 Peter 2:21",
+  "Phi. 3:13-14": "Philippians 3:13-14",
+  "Heb. 13:8-9": "Hebrews 13:8-9",
+
+  "Col. 3:1-4": "Colossians 3:1-4",
+  "Heb. 11:8-16, 24-27": "Hebrews 11:8-16|Hebrews 11:24-27",
+  "1Jn. 3:1-3": "1 John 3:1-3",
+  "Phi. 3:17-21": "Philippians 3:17-21",
+  "Heb. 12:14": "Hebrews 12:14",
+  "Matt. 4:19": "Matthew 4:19",
+  "Matt. 28:19": "Matthew 28:19",
+
+  "Jn. 17:3": "John 17:3",
+  "Ps. 27:3-4": "Psalms 27:3-4",
+  "Ps. 42:1-2": "Psalms 42:1-2",
+  "Phi. 3:7-12": "Philippians 3:7-12",
+  "2Cor. 3:18": "2 Corinthians 3:18",
+  "Exo. 33:12-18": "Exodus 33:12-18",
+  "Dan. 11:32": "Daniel 11:32",
+  "Hos. 6:1-3": "Hosea 6:1-3",
+  "Heb. 5:12-14": "Hebrews 5:12-14",
+  "Mar. 3:14": "Mark 3:14",
+  "Jn. 15:15-16": "John 15:15-16",
+  "SS. 1:2-4": "Song of Solomon 1:2-4",
+  "Exo. 33:11": "Exodus 33:11",
+  "Num. 12:7-8": "Numbers 12:7-8",
+
+  "2Co. 2:14-16": "2 Corinthians 2:14-16",
+  "2Co. 4:1-7": "2 Corinthians 4:1-7",
+  "Matt. 4:13-17": "Matthew 4:13-17",
+  "SS. 1:3": "Song of Solomon 1:3",
+
+  "2Cor. 4:3-7": "2 Corinthians 4:3-7",
+  "Gal. 2:20-21": "Galatians 2:20-21",
+  "Php. 1:20-21": "Philippians 1:20-21",
+
+  "1Co. 1:17-25": "1 Corinthians 1:17-25",
+  "1Co. 2:2-5": "1 Corinthians 2:2-5",
+  "Act. 5:41-42": "Acts 5:41-42",
+  "Gal. 1:6-12": "Galatians 1:6-12",
+  "Gal. 2:16": "Galatians 2:16",
+  "Col. 1:28-29": "Colossians 1:28-29",
+  "Phi. 1:15-18": "Philippians 1:15-18",
+
+  "Matt. 24:14": "Matthew 24:14",
+  "Matt. 28:18-20": "Matthew 28:18-20",
+  "Joh. 4:34": "John 4:34",
+  "Joh. 17:4": "John 17:4",
+  "Act. 20:18-27": "Acts 20:18-27",
+  "Act. 26:19": "Acts 26:19",
+  "Gal. 1:15-16": "Galatians 1:15-16",
+  "Col. 4:17": "Colossians 4:17",
+  "2Tim. 4:5-8": "2 Timothy 4:5-8",
+  "2Pet. 1:12-15": "2 Peter 1:12-15",
+  "Jos. 13:1-7": "Joshua 13:1-7",
+
+  "Joh. 12:25-26": "John 12:25-26",
+  "1Co. 9:24-27": "1 Corinthians 9:24-27",
+  "2Ti. 2:3-7": "2 Timothy 2:3-7",
+  "2Ti. 4:7-8": "2 Timothy 4:7-8",
+  "1Pe. 5:1-4": "1 Peter 5:1-4"
+};
+
+const studyText = `
+PAGE 5
+
+Bible Study
+JESUS
+Our Focus In This Revival
+
+Introduction
+
+As we have been guided by the Lord in the past few years and considering the outburst that has come on our lives and in the work, the need to maintain our focus on God's plan and purpose for this divine visitation to the earth has become very crucial. The issue of maintaining the focus on what God is seeking to establish with our lives in His work at this time is very important lest we waste the outpouring of the Holy Spirit on things that would not fulfil God's desire for this move of God. Walking with a single eye on the goal; fighting not as one beating the air; running with a definite purpose and finishing the mandate you were given in life is the crux of our study in this year's MLR, even as we expect times of refreshing from the presence of the Lord.
+
+A. Jesus: The Substance Of Our Message
+Col. 2:17 NKJV, GNB, AMP
+
+To be focused in life and particularly on God's purpose for this move, we must need to understand what the goal of this revival actually is. From the beginning to the end, Christ is God's divine agenda first for everyone and for every ministry approved by Him. In every form of it, anything that you are doing or involved in that does not point to Christ and does not focus on Christ, and for Christ to be formed in people is already off the point.
+
+1. Jesus: God's Message To Us And Through Us
+Heb. 1:1-3; Matt. 17:5; Col. 1:12-23, 27-29; 1Cor. 1:16-25; 1Cor. 2:1-5; 2Cor. 4:5-6
+
+Let this matter sink into your heart today. God's message to mankind is Christ. All Scriptures are written to reveal Him. All messengers are raised and sent to speak of Him. We are called to become like Him in every respect and to let His life flow out through us as we live day by day.
+
+PAGE 6
+
+2. Jesus Says “I Am...”
+
+Let us study what Christ Jesus says about Himself in the several “I am” we find in the word of God. Discuss the implications of this on our lives, our message and our labour in this revival.
+
+a. The Light of life; the light of the world
+Jn. 1:4, 9; Jn. 3:16-21; Jn. 8:12; Jn. 9:4-5; Matt. 5:14-16
+
+b. The Bread of Life, the Living Bread
+Jn. 6:31-35; Jn. 6:48-51; Jn. 6:56-58
+
+c. The Door of the Sheep
+Jn. 10:1-10; Rev. 3:7-8
+
+d. The Good Shepherd
+Jn. 10:11-16; 1Pet. 5:2-4
+
+e. The Way, the Truth and the Life
+Jn. 14:6; Jn. 1:16-17; Heb. 9:8; Rom. 5:2; Eph. 2:18; Eph. 3:12
+
+f. The Resurrection and the Life
+Jn. 11:25-26; Jn. 1:4
+
+g. The True Vine
+Jn. 15:1-7
+
+You will not be serving God's divine purpose for your life unless Christ becomes central and all-encompassing in all you do. It is not you or your ministry that must increase; it is Christ that must increase and be known. It is Christ that God has appointed the heir of all things and it is out of His fullness that we all have received grace upon grace. We are heirs of God just because of Him and what He did at Calvary for us. No ministry pleases God unless it focuses on the Son. Anyone who does not have the Son does not have life and the wrath of God abides on him. No message impresses God if it is not centred on Christ and Him crucified. People are not being prepared for heaven unless Christ is formed in them. Whatever vision anyone is given in life should only be an expression of this agenda; Christ, the Son of God; Christ the Lord of all and Christ in you, the hope of glory.
+
+God has introduced no other man on earth for us to follow or listen to. All others were and are only a shadow and an illustration of the Son. He is the substance and the reality.
+
+3. God, The Father's Testimony About Jesus...
+
+Let us study what the Father says about Jesus and why we must teach and preach Him, behold and follow Him to become like Him.
+
+a. At the Baptism of John at the Jordan river
+Matt. 3:13-17; Jn. 1:26-34
+
+b. On the mount of transfiguration as the pattern Son
+Matt. 17:1-8; Luk. 9:28-36; 2Pet. 1:16-18; Rom. 8:29
+
+c. As God's pattern servant
+Isa. 42:1-4; Mat. 12:15-21; Heb. 3:1-6; Heb. 5:4-6
+
+d. Having become so much better than the angels
+Heb. 1:1-13
+
+PAGE 7
+
+Moses and Elijah were great vessels God used in their generations and they stood significantly in the purpose of God, but they cannot stand at the same level with the Lord Jesus in our hearts. They cannot share the space with the Lord Jesus in our hearts. They are in the shadows and must continue to be overshadowed by Christ in all our lives and messages. The prophets and Moses are pointers to the Lord; how can we settle with the signboards and pointers and not follow the Lord?
+
+No angel compares with Him and we cannot compare Him with any angel. John the Baptist captured this very clearly in His ministry as he repeatedly confessed “I am not the Christ”. John said he is not the true Light. He was just a voice sent to prepare His way. He was not the bridegroom. He who has the bride is the bridegroom. He said he is only a friend of the bridegroom who rejoices when he sees the bride hearing the voice of the bridegroom. John said, “He must increase and I must decrease” Jn. 1:19-23; Jn. 3:26-34.
+
+We must behold Him for life and we must behold Him for ministry. We must follow in His footsteps if we hope to arrive on the shore of glory. “He who serves me, let him follow me” is what He said. Jn. 12:26; Heb. 12:2-3
+
+4. Jesus Is The Rock, The Chief Cornerstone And The Foundation
+Act. 4:10-12; 1Cor. 3:9-15; Matt. 7:24-27; Matt. 16:16-19; Isa. 28:14-16; Luk. 20:17-18; 1Pet. 2:4-7
+
+Discuss the implication of this truth on all we have to do first in our own lives and in this labour for the building of the body of Christ and for the revival for which we are praying and labouring.
+
+This is the emphatic declaration He made. This is the divine agenda God has fashioned for everyone He has called either into pulpit ministry or any other vocation among men. He is the foundation and the Chief cornerstone upon which God is building His work on earth. All builders must take cognisance of this or else they would be labouring in vain.
+
+5. Jesus Is Our Passover Lamb, The Lamb Of God
+Jn. 1:29, 35-36; Jn. 11:47-57; 1Cor. 5:7-8; Isa. 53:5-8; Col. 1:12-14; Heb. 9:14; Heb. 9:22-28
+
+Discuss the biblical concept of the Passover lamb and now the lamb of God who was slain for our sins. What is the power in the blood of the Lamb for our lives today?
+
+PAGE 8
+
+6. Jesus Is Our High Priest
+Heb. 2:17-18; Heb. 4:14-16; Heb. 5:1-5, 7; Heb. 7:12-28; Heb. 8:1-6; Eph. 2:18; Eph. 3:12; Heb. 9:22-28; Heb. 10:19-22
+
+Highlight the crucial understanding we must have about Jesus as our High Priest and how does it impact on our pursuit of revival in the body of Christ?
+
+He is the sum of all things. He is the high priest we have now who is set on the right of the throne of the Majesty in the heavens. He is the minister of the sanctuary and of the true tabernacle, which the Lord pitched and not man. It is in Him and through Him that our lives, service and sacrifice can be acceptable to God. We have no access to God except through this High Priest. It is for by Him and for Him that everything has its existence. He is the heir of all things...
+
+Conclusion
+
+To conclude on this divine agenda, let us note that Christ is God’s solution to all man's woes. He is the redeemer and the propitiation for all our predicaments and sins. He is the Way, the Truth and the Life. No one comes to the Father unless by Him. He is the one in whom God is pleased for the fullness of the deity to dwell in bodily form. He is the one that holds the keys of the kingdom. He is the door of the sheep. He is the solution to all the economic challenge in the nations. He is the light that shines and darkness cannot comprehend it. He is the end of the law of righteousness to all who believe. Rom. 10:1-4
+
+B. What To Focus Upon In Christ
+
+We have now come to the point of learning what to focus upon in Christ in order to stay focused and maintain a single eye on the divine agenda for which we were saved and called with this holy calling. While there is a lot to do in the work of the Lord, you must know that your call first and foremost is not to work for God but to believe in the Lord Whom He has sent. This is the work of God. God's first agenda is for you to believe in Jesus Christ, follow Him and to be conformed to His image. Jn. 6:27-29; Rom. 8:28-30. Read these also in the Amplified Bible version.
+
+Walking with God must be given priority; it comes before any work you may do for God. If you focus on the work of God, you may actually miss the Lord. The ministry will become your idol and preoccupation. It is the Lord
+
+PAGE 9
+
+that must first be the focus of your life. It is as we focus on Jesus as the treasure of our lives and the treasure of our pursuit, that we would be focused on God's primary agenda for our lives and for our ministry.
+
+Your ministerial focus will not be right unless Christ and Him crucified is your personal life focus. It is not the miracles He does for you that must be your focus. The people came seeking Him because of the bread they ate the other day. It must not be so with you. He Himself must be the bread of life we seek to eat day by day. His life is the bread we must eat daily to have life in ourselves. All who would not focus on Him already have no focus at all.
+
+We shall consider this under nine sub-headings just for the sake of in-depth study. It will be vague if we just say, let us be focused on Jesus as the divine agenda. As preachers and leaders, as men and women standing for God on the pulpit, in the society among the business men, politicians, academics and other professionals, what do we focus upon in Christ Jesus as God's agenda for us and for this generation?
+
+1. You Must Focus On Jesus As The Invaluable, Unfading Treasure Of Your Life
+Matt. 13:44-46; Jn. 3:16; Jn. 4:10-14; 2Cor. 9:15
+
+a. Look at what Jesus said about the treasure of the kingdom.
+i. Discuss this parable. What could make this merchant man take such a drastic decision? What is his valuation of the treasure he found?
+ii. When Jesus said the kingdom of heaven is like this, what does it imply in your heart? Is there any other way to possess the kingdom without selling all you have to purchase it?
+iii. What then will this treasure from heaven cost you?
+
+b. Look at the condition Jesus laid for the disciples who wanted to follow Him. Luk. 14:25-33; Mk. 10:17-31.
+i. Discuss what you understand about what to let go in order to have this treasure of knowing and following Christ.
+ii. What was the demand of Christ on the rich young ruler because He loved him for him to have treasure in heaven?
+iii. What was his major obstacle unto possessing this treasure and what was Christ conclusion?
+iv. Discuss the reaction and response of the disciples. How do you also honestly consider this matter of selling all to purchase this treasure?
+v. Analyse the Lord's instruction as regards where and how to lay our treasures Matt. 6:19-21; Mk. 10:21.
+
+PAGE 10
+
+Where a man's treasure is, there will his heart be. Focus is determined by what you estimate as a treasure. To stay focussed on this divine agenda for calling you, Christ must be the treasure you are willing to sell all that you have to possess. If there is any other treasure elsewhere for you that have not been laid down at His feet in order to possess “this field,” it will surely divide your focus. You will not be able to maintain a single eye.
+
+It is not just about things and properties that we are concerned here; the Lord also talked about your relationships and your own life also Lk. 14:26. Christ is the treasure for which we must be ready to sell all. As disciples came and expressed their desire to follow Him, it was the same condition He confronted them with. “Whosoever he be of you that does not forsake all that he has, he cannot be my disciple”. Christ is the treasure we must pursue. Knowing Him will pay off for us. If you do not meet this initial condition of leaving all to pursue Christ, it will be difficult for you to maintain a single focus in your pursuit of Him.
+
+c. Look at Paul's testimony Phi. 3:4-14; Phi. 1:20-21
+i. Discuss what were the things he left to purchase this treasure Phi. 3:4-8. Read it also in the Amplified Bible version.
+ii. What was his estimation or valuation of this treasure he has found in Christ? Phi. 3:7-10
+iii. How did he pursue Christ as the treasure of his life now? Phi. 3:10-14
+
+It is clear that Paul left all to follow Jesus and gain Him. All that was gain to him, he counted but dung in order to win Christ. He looked at all that he used to brag about in the flesh, compared with his estimate of the invaluable Christ, and came to conclude that they were all as one combined loss for Christ's sake.
+
+Someone would normally turn back from focussing on the divine agenda like Lot's wife as long as he has something valuable to him in “Sodom and Gomorrah”. Remember Lot's wife Gen. 19:26; Lk. 17:31-32. She looked back because her treasures were in that land of perdition.
+
+PAGE 11
+
+What is your treasure? And where is your treasure? Check your heart at this point and ask a very honest question: What and what are my treasures and where have I laid them? You cannot set your affection where your treasure is not located Col. 3:1-2.
+
+2. We Must Focus On Jesus, The Source And Goal — The Author And The Finisher — Of Our Faith
+Heb. 12:1-3; Rev. 1:5-8, 17-18; Isa. 44:6; 1Pet. 2:21; Phi. 3:13-14
+
+This is the next issue we must consider in staying focused on the divine agenda. Christ is not just the invaluable treasure we must purchase with all that we have; He is the source and goal of our faith. He is the author and the finisher of our faith. There would be no need to run in this race if there is no goal ahead of us. All who run in a race keep their eyes on the finishing line and the prize. Christ is both the source and the goal of our faith. He is the One who originated and began our faith and He is the goal, the end point, of it. Your life and ministry will be in vain if you do not eventually stand before Him and have Him as your prize. He is not just an example for us to look up to; He is the source of all we have and He is also the goal. He is the author and the finisher. He is the Alpha and the Omega of our faith.
+
+To stay on track and to win the crown of glory at last, we must learn to keep our gaze constantly on Him. We must keep looking at Him. It is from Him we receive the pattern for what we must do if it will be acceptable before God. He is also the perfecter of our faith. At the beginning of our faith, He is there. At the end of all our race here on earth, He will be there. Several saints who ran this race ahead of us are now standing in the gallery watching how we run. We must be careful not to miss our track. The only way to stay focused, is to focus on Him who never fails and would never change. Other things could change, but He will not Heb. 13:8-9. We must not focus on men, even though they are our object of ministry, otherwise we would be derailed. Our focus must be on Jesus Christ who is the source and goal of our faith.
+
+3. We Must Focus On The Things That Are Above — Where Christ Holds The Highest Position
+Col. 3:1-4; Heb. 11:8-16, 24-27; 1Jn. 3:1-3; Phi. 3:17-21
+
+a. In discussing this focus on the things that are above, highlight how you have been personally challenged by the examples in these passages.
+
+b. From the Scriptures below, give some definite examples of things that are above — where Christ is. Rom. 8:29; Heb. 12:14; Matt. 4:19; Jn. 12:26; Matt. 28:19
+
+To stay focused on the divine agenda, we need to focus on the things above
+
+PAGE 12
+
+and not set our affection on things below. We must pursue the things over which Christ presides and set our eyes on those things that are compatible with His own perspective. We must be alert to what is going on around Christ. Unless we keep our eyes on the things above, we may get our lives entangled again with the affairs of this life.
+
+Remember that as far as this world is concerned, you are dead and your life is hid in Christ in God. Your old life is dead. The life you now have is Christ living His life in you. Let this be the only focus you have, so as to make definite progress in the new life.
+
+God's agenda for you actually is that Christ will live in you, find His permanent abode in you and then through you, do His work on earth.
+
+4. We Must Focus On Knowing Him And Becoming Like Him
+Jn. 17:3; Ps. 27:3-4; Ps. 42:1-2; Phi. 3:7-12; Rom. 8:29; 2Cor. 3:18; Exo. 33:12-18; Dan. 11:32; Hos. 6:1-3
+
+i. Let us examine what we mean by seeking to know Him and to become like Him as we look at how the Amplified version renders the passages we have been considering.
+ii. Discuss what is striking in the examples of David, Moses, Daniel.
+iii. How do we pursue knowing Him practically and experientially as we reflect on 2Cor. 3:18 and Hos. 6:1-3; Heb. 5:12-14
+
+To stay focused on the divine agenda, we must concentrate our hearts and life on knowing Jesus and becoming like Him. Whereas a minister may be so preoccupied with activities of ministry, he may not actually grow in God's work unless he himself is growing in his personal knowledge of the Lord and becoming more and more conformed to His image. The more we become like Him in life, the more we may be able to express Him clearly among men. It is this one thing that Moses, David, Daniel and others even in the Old Testament made their priority that gave them the success we now speak about them. Christ Himself in His final intercessory prayer for the disciples before going to the Cross said “And this is eternal life, that they may know you, the only true God, and Jesus Christ whom you have sent”.
+
+If you focus on your own personal pursuit of God, seeking to know Him more intimately, you will never derail in life and in ministry. You will not be distracted by the side-attractions.
+
+PAGE 13
+
+It is not cognitive knowledge we are speaking about here. It is rather the relational, affective knowledge, which comes out of intimacy, repeated interaction and continuous acquaintance. It is a progressive, cumulative and explorative relationship that enables us to understand the wonders of His person. It sharpens our perception of Him and of His will. We get to know more strongly and more accurately His own perspective over things. We can then easily recognise His stand over matters and that would keep us in line with His agenda on the earth.
+
+This knowing is what would make us conform to His own lifestyle. As we behold Him daily and explore Him, we shall be changed into His likeness from one degree of glory to another. Becoming like Jesus is not possible with casual head knowledge. It is an intimate relationship built steadily and progressively over time without break that will transform our own thoughts and nature. We shall then begin to see things as He sees them. Men called them Christians at Antioch, as they perceived that they have been with Jesus. He called them to be with Him in order to build this relationship. It is the same agenda He has for all who He calls even now. To be with Him, to learn of Him, to be like Him and to be yoked to Him is the fulcrum of our call and it is the divine agenda for our lives as His ministers.
+
+iv. Our ordination is to be with Him and become His intimate friends. How do we respond to this?
+Mar. 3:14; Jn. 15:15-16; SS. 1:2-4; Exo. 33:11; Num. 12:7-8
+
+This is His agenda for everyone He calls. It is first for us to walk with Him in an intimate friendship. Going out to preach or do work of ministry or any other assignment would be only an outflow of our relationship with Him. Are you focused on building a personal friendship with Him? Are you determined as Paul to pursue a personal knowledge of the Lord and to be acquainted with Him such that you can be conformed to His life, His death and His resurrection? If this is not your personal focus, you have not got a right focus.
+
+5. We Must Focus On Reflecting Him And Spreading His Aroma Among Men
+2Co. 2:14-16; 2Co. 4:1-7; Matt. 4:13-17; Matt. 5:14-16; Phi. 1:20-21; SS. 1:3
+
+i. Discuss this as our task and our calling to shine His life-light. How do we build this kind of life?
+ii. As we examine these passages in a little detail, you will discover that our task is not just to proclaim but to make manifest the truth by the demonstration of a transparent lifestyle. What practical experience do you have in this?
+
+PAGE 14
+
+Understanding God's desire for our lives as His ministers will help us to keep a clear focus on the divine agenda. What God looks for is not men who shout about but ministers who shine and smell with His life-fragrance and spreads abroad the fragrance of His knowledge. He wants to lead us about among men as His captives in the victory procession. He wants to showcase us as exhibits of His victory over sin, self and Satan. This indeed is our task. It is the very core of our call into the ministry. It is what He wants to use us for whether on the pulpit or in our various professions where we stand to establish His kingdom among men. You must focus on that.
+
+The second consideration here is for us to be the ministers that shine the light of His life from within their hearts. It is as we reflect His glorious life as the light that shines in darkness that men who sit in the region of darkness and death will see the light and come to His marvellous light and be delivered.
+
+To stay focused on the divine agenda, we then must focus on pursuing a ministry of life that smells and shines rather than that which shouts on the loudspeakers. This being the very heart of God's call on our lives must engage all our hearts.
+
+6. We Must Focus On Seeing Him Glorified And Magnified In Our Body
+2Cor. 4:3-7; Gal. 2:20-21; Php. 1:20-21
+
+i. Discuss the resolve we see in Paul here.
+ii. What is your own practical experience in this, and what will you do henceforth?
+
+As we have come to see that the very reason we have been brought into the ministry or whatever we are allowed to do in life having been redeemed by His precious blood is for Christ to be made known among men and preached in the world, His life being magnified in our own lives must become our own priority of focus. Paul made this his earnest expectation and hope that whether it be by life or by death Christ will be magnified in his body. If this remain your pursuit as a child of God and a leader in God's work, you will do well. Staying focused on the divine agenda must definitely continue to cause Christ to increase while we decrease.
+
+A ministry that does not glorify Christ and magnify Him has already derailed from the purpose for which God raised it. The Holy Spirit comes only to glorify Christ and to point men to Him. To pursue our own self ambition and personal popularity with His gifts and grace is to rob Him and to obscure His authority. It will cause you to derail from God's agenda for calling you.
+
+PAGE 15
+
+7. We Must Focus On Preaching And Teaching Christ And Him Crucified
+1Co. 1:17-25; 1Co. 2:2-5; Act. 5:41-42; Gal. 1:6-12; Gal. 2:16; Gal. 2:20-21; Col. 1:28-29; Phi. 1:15-18
+
+i. Highlight what definite commitment we must have as we focus on preaching and teaching no other message but Christ.
+ii. What are the challenges of staying focused on preaching Christ and Him crucified you discover in these passages?
+
+This was the focus the early preachers maintained and they turned their world upside down. Whatever passage of Scripture fell on their laps, it was sufficient to preach Jesus to everyone even though they mostly had only the Old Testament scrolls to use. Jesus was their message, not money or material things. They preached Christ and spoke nothing about themselves except to make themselves slaves of the Church for Christ's sake.
+
+Jesus is still the theme and the focus of any biblical preaching. Preaching and teaching Jesus from house to house and daily in the temple was what brought all that we now see being reported in the book of Acts of the Apostles. Much of our modern day preachers have a different focus from this. They may mention the name of Jesus just to sanitize all the stuff they are preaching into the Bible, but their focus is different. If Christ is not preached passionately and deliberately, we have missed the focus.
+
+8. We Must Focus On Finishing His Task
+Matt. 24:14; Matt. 28:18-20; Joh. 4:34; Joh. 17:4; Act. 20:18-27; Act. 26:19; Gal. 1:15-16; Col. 4:17; 2Tim. 4:5-8; 2Pet. 1:12-15; Jos. 13:1-7
+
+i. What is the scope of our task?
+ii. Analyse what each one of us must do to finish the task God has committed to our hands.
+iii. What are the lessons you have picked from the various examples in these Scriptures?
+
+The task of making disciples of all nations is the commission He left with us. This gospel of the kingdom must be preached among all the nations for a testimony and then shall the end come. We must focus on reaching the unreached peoples of our generation. We must engage all our powers for this purpose. All opportunities must be exploited for this task. We must keep our eyes on the fields that are white already to harvest, even as we pursue this burden for revival and transformation in the nations. We must focus our hearts on what land yet remains to be possessed. Finishing and finishing well must be our goal and prayer.
+
+FINAL PAGE
+
+9. We Must Focus On Being With Him At Last In Glory
+Joh. 12:25-26; 1Co. 9:24-27; 2Ti. 2:3-7; 2Ti. 4:7-8; 1Pe. 5:1-4
+
+i. Discuss this matter of being with Him at last in glory. What does it imply for you?
+ii. What must we do to keep this focus and to finally make it to be with Him in glory?
+
+If you lose focus on the final end, you may discover that you have run in vain. Many there are today, whose god is their belly. They preach only for what they can get to consume on their own lust. They are not eager to meet the Lord in glory. If you miss the crown, no matter all you amass here on earth, you have missed it all. What does it profit a man if he gains the whole world and loses his own soul? Be wise now.
+
+Finally,
+
+As we push for the times of refreshing, every outpouring is for a clear purpose. If we lose the focus God set for this outpouring, it will only leave our lands and nations with terrible erosion and deep gullies of unbelief and reproach against the name of the Lord in the earth. Keep a single eye on His agenda first for your life personally and it will be well with you. And as a people, so called by God by mercy, we must keep our focus on Christ and Him crucified even as we see Him move among us in the nations. Let your eyes look straight ahead and let your sight be focused. God bless you.
+
+NOTES
+____________________________________________________
+____________________________________________________
+____________________________________________________
+____________________________________________________
+`;
+
+const modalBg = document.getElementById("modalBg");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const closeBtn = document.getElementById("closeBtn");
+const cache = {};
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function convertReferencesToButtons(text) {
+  let html = escapeHtml(text);
+
+  const labels = Object.keys(referenceMap).sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(labels.map(escapeRegex).join("|"), "g");
+
+  html = html.replace(pattern, match => {
+    const apiRef = referenceMap[match];
+    return `<button class="scripture-btn" data-ref="${escapeHtml(apiRef)}">${escapeHtml(match)}</button>`;
+  });
+
+  html = html
+    .replace(/\n{2,}/g, "</p><p>")
+    .replace(/\n/g, "<br>");
+
+  return `<p>${html}</p>`;
+}
+
+document.getElementById("pdfText").innerHTML = convertReferencesToButtons(studyText.trim());
+
+async function fetchPassage(ref) {
+  if (cache[ref]) return cache[ref];
+
+  const url = "https://bible-api.com/" + encodeURIComponent(ref) + "?translation=kjv";
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Could not load " + ref);
+  }
+
+  const data = await response.json();
+  cache[ref] = data;
+  return data;
+}
+
+function passageHtml(data, requestedRef) {
+  const title = data.reference || requestedRef;
+  let html = `<article><h3>${escapeHtml(title)}</h3>`;
+
+  if (data.verses && data.verses.length) {
+    html += data.verses.map(v => `
+      <p class="verse">
+        <span class="verse-num">${escapeHtml(v.verse)}</span>
+        ${escapeHtml(v.text.trim())}
+      </p>
+    `).join("");
+  } else {
+    html += `<p>${escapeHtml(data.text || "")}</p>`;
+  }
+
+  html += `</article>`;
+  return html;
+}
+
+async function openScripture(button) {
+  const label = button.textContent.trim();
+  const refs = button.dataset.ref.split("|").map(r => r.trim()).filter(Boolean);
+
+  modalTitle.textContent = label;
+  modalBody.innerHTML = `<p class="loading">Loading scripture text...</p>`;
+  modalBg.classList.add("open");
+
+  try {
+    const passages = await Promise.all(refs.map(fetchPassage));
+    modalBody.innerHTML = passages
+      .map((data, index) => passageHtml(data, refs[index]))
+      .join("<hr>");
+  } catch (err) {
+    const search = encodeURIComponent(refs.join("; "));
+    modalBody.innerHTML = `
+      <div class="error">
+        Scripture could not be loaded automatically.
+        <br><br>
+        <a href="https://www.biblegateway.com/passage/?search=${search}&version=KJV" target="_blank">
+          Open this passage on BibleGateway
+        </a>
+      </div>
+    `;
+  }
+}
+
+document.querySelectorAll(".scripture-btn").forEach(button => {
+  button.addEventListener("click", () => openScripture(button));
+});
+
+function closeModal() {
+  modalBg.classList.remove("open");
+}
+
+closeBtn.addEventListener("click", closeModal);
+
+modalBg.addEventListener("click", e => {
+  if (e.target === modalBg) closeModal();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+});
+</script>
+
+</body>
+</html>
+```
+
+This version uses:
+
+```txt
+https://bible-api.com
+```
+
+to fetch the KJV text when a scripture button is clicked.
